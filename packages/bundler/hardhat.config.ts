@@ -7,6 +7,9 @@ import fs from 'fs'
 import { HardhatUserConfig } from 'hardhat/config'
 import { NetworkUserConfig } from 'hardhat/src/types/config'
 
+const dotenv = require("dotenv");
+dotenv.config({path: __dirname + '/.env'});
+
 const mnemonicFileName = process.env.MNEMONIC_FILE
 let mnemonic = 'test '.repeat(11) + 'junk'
 if (mnemonicFileName != null && fs.existsSync(mnemonicFileName)) {
@@ -38,7 +41,17 @@ const config: HardhatUserConfig = {
       url: 'http://localhost:8545/',
       saveDeployments: false
     },
-    goerli: getInfuraNetwork('goerli')
+    goerli: getInfuraNetwork('goerli'),
+    opbnbtestnet: {
+      url: "https://opbnb-testnet-rpc.bnbchain.org",
+      chainId: 5611,
+      accounts: [process.env.PRIVATE_KEY!]
+    },
+    bnbtestnet: {
+      url: "https://data-seed-prebsc-1-s1.binance.org:8545",
+      chainId: 97,
+      accounts: [process.env.PRIVATE_KEY!]
+    }
   },
   solidity: {
     version: '0.8.15',

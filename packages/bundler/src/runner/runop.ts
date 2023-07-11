@@ -17,6 +17,9 @@ import { runBundler } from '../runBundler'
 import { BundlerServer } from '../BundlerServer'
 import { getNetworkProvider } from '../Config'
 
+const dotenv = require("dotenv");
+dotenv.config({path: __dirname + '/.env'});
+
 const ENTRY_POINT = '0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789'
 
 class Runner {
@@ -66,7 +69,7 @@ class Runner {
       owner: this.accountOwner,
       index: this.index,
       overheads: {
-        // perUserOp: 100000
+        perUserOp: 100000
       }
     })
     return this
@@ -102,6 +105,7 @@ async function main (): Promise<void> {
   const program = new Command()
     .version(erc4337RuntimeVersion)
     .option('--network <string>', 'network name or url', 'http://localhost:8545')
+    .option('--privateKey <string>', 'private key of funding account' )
     .option('--mnemonic <file>', 'mnemonic/private-key file of signer account (to fund account)')
     .option('--bundlerUrl <url>', 'bundler URL', 'http://localhost:3000/rpc')
     .option('--entryPoint <string>', 'address of the supported EntryPoint contract', ENTRY_POINT)
@@ -137,7 +141,10 @@ async function main (): Promise<void> {
     bundler = await runBundler(argv)
     await bundler.asyncStart()
   }
-  if (opts.mnemonic != null) {
+  if (opts.privateKey != null) {
+    signer = new Wallet(opts.privateKey).connect(provider)
+  }
+  else if (opts.mnemonic != null) {
     signer = Wallet.fromMnemonic(fs.readFileSync(opts.mnemonic, 'ascii').trim()).connect(provider)
   } else {
     try {
@@ -178,7 +185,8 @@ async function main (): Promise<void> {
     console.log('funding account to', requiredBalance.toString())
     await signer.sendTransaction({
       to: addr,
-      value: requiredBalance.sub(bal)
+      value: requiredBalance.sub(bal),
+      gasPrice: provider.getGasPrice(),
     }).then(async tx => await tx.wait())
   } else {
     console.log('not funding account. balance is enough')

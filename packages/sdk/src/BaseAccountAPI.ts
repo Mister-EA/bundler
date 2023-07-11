@@ -178,11 +178,13 @@ export abstract class BaseAccountAPI {
     const value = parseNumber(detailsForUserOp.value) ?? BigNumber.from(0)
     const callData = await this.encodeExecute(detailsForUserOp.target, value, detailsForUserOp.data)
 
-    const callGasLimit = parseNumber(detailsForUserOp.gasLimit) ?? await this.provider.estimateGas({
-      from: this.entryPointAddress,
-      to: this.getAccountAddress(),
-      data: callData
-    })
+    // const callGasLimit = parseNumber(detailsForUserOp.gasLimit) ?? await this.provider.estimateGas({
+    //   from: this.entryPointAddress,
+    //   to: this.getAccountAddress(),
+    //   data: callData
+    // })
+
+    const callGasLimit = BigNumber.from("44444")
 
     return {
       callData,
@@ -245,13 +247,16 @@ export abstract class BaseAccountAPI {
       maxPriorityFeePerGas
     } = info
     if (maxFeePerGas == null || maxPriorityFeePerGas == null) {
-      const feeData = await this.provider.getFeeData()
-      if (maxFeePerGas == null) {
-        maxFeePerGas = feeData.maxFeePerGas ?? undefined
-      }
-      if (maxPriorityFeePerGas == null) {
-        maxPriorityFeePerGas = feeData.maxPriorityFeePerGas ?? undefined
-      }
+      // const feeData = await this.provider.getFeeData()
+      // if (maxFeePerGas == null) {
+      //   maxFeePerGas = feeData.maxFeePerGas ?? undefined
+      // }
+      // if (maxPriorityFeePerGas == null) {
+      //   maxPriorityFeePerGas = feeData.maxPriorityFeePerGas ?? undefined
+      // }
+      const gasPrice = await this.provider.getGasPrice()
+      maxFeePerGas = gasPrice
+      maxPriorityFeePerGas = gasPrice
     }
 
     const partialUserOp: any = {
@@ -289,7 +294,7 @@ export abstract class BaseAccountAPI {
    */
   async signUserOp (userOp: UserOperationStruct): Promise<UserOperationStruct> {
     const userOpHash = await this.getUserOpHash(userOp)
-    const signature = this.signUserOpHash(userOpHash)
+    const signature = await this.signUserOpHash(userOpHash)
     return {
       ...userOp,
       signature
